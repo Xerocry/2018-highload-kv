@@ -16,8 +16,13 @@
 
 package ru.mail.polis;
 
+import one.nio.http.HttpServerConfig;
+import one.nio.server.AcceptorConfig;
 import org.jetbrains.annotations.NotNull;
+import ru.mail.polis.xerocry.Service;
+import ru.mail.polis.xerocry.Store;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Set;
 
@@ -37,14 +42,14 @@ final class KVServiceFactory {
      * Construct a storage instance.
      *
      * @param port     port to bind HTTP server to
-     * @param dao      DAO to store the data
+     * @param data      DAO to store the data
      * @param topology a list of all cluster endpoints {@code http://<host>:<port>} (including this one)
      * @return a storage instance
      */
     @NotNull
     static KVService create(
             final int port,
-            @NotNull final KVDao dao,
+            @NotNull final File data,
             @NotNull final Set<String> topology) throws IOException {
         if (Runtime.getRuntime().maxMemory() > MAX_HEAP) {
             throw new IllegalStateException("The heap is too big. Consider setting Xmx.");
@@ -53,8 +58,10 @@ final class KVServiceFactory {
         if (port <= 0 || 65536 <= port) {
             throw new IllegalArgumentException("Port out of range");
         }
-
-        // TODO: Implement me
-        throw new UnsupportedOperationException("Implement me!");
+        HttpServerConfig config = new HttpServerConfig();
+        AcceptorConfig acceptorConfig = new AcceptorConfig();
+        acceptorConfig.port = port;
+        config.acceptors = new AcceptorConfig[]{acceptorConfig};
+        return new Service(config, new Store(data));
     }
 }

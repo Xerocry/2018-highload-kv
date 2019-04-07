@@ -16,6 +16,7 @@ dependencies {
 
     // Annotations for better code documentation
     compile("com.intellij:annotations:12.0")
+    compile("com.sun.net.httpserver:http:20070405")
 
     // JUnit 5
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.1")

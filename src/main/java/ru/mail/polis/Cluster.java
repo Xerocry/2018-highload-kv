@@ -52,7 +52,7 @@ public final class Cluster {
             final KVService storage =
                     KVServiceFactory.create(
                             port,
-                            dao,
+                            data,
                             topology);
             storage.start();
             Runtime.getRuntime().addShutdownHook(

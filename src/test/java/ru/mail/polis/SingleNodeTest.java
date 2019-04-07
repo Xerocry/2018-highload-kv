@@ -52,7 +52,7 @@ class SingleNodeTest extends TestBase {
         data = Files.createTempDirectory();
         dao = KVDaoFactory.create(data);
         endpoint = endpoint(port);
-        storage = KVServiceFactory.create(port, dao, Collections.singleton(endpoint));
+        storage = KVServiceFactory.create(port, data, Collections.singleton(endpoint));
         storage.start();
         Thread.sleep(TimeUnit.SECONDS.toMillis(1));
         reset();
@@ -242,7 +242,7 @@ class SingleNodeTest extends TestBase {
             dao = KVDaoFactory.create(data);
             port = randomPort();
             endpoint = endpoint(port);
-            storage = KVServiceFactory.create(port, dao, Collections.singleton(endpoint));
+            storage = KVServiceFactory.create(port, data, Collections.singleton(endpoint));
             storage.start();
             Thread.sleep(TimeUnit.SECONDS.toMillis(1));
             reset();
