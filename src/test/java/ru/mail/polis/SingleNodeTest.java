@@ -23,6 +23,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import ru.mail.polis.xerocry.Store;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class SingleNodeTest extends TestBase {
     private static final Duration TIMEOUT = Duration.ofMinutes(1);
     private static File data;
-    private static KVDao dao;
+    private static Store dao;
     private static int port;
     private static String endpoint;
     private static KVService storage;

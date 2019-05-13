@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
+import java.security.SecureRandom;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
@@ -30,6 +31,8 @@ import java.util.concurrent.ThreadLocalRandom;
  * @author Vadim Tsesko <incubos@yandex.com>
  */
 abstract class TestBase {
+    static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    static SecureRandom rnd = new SecureRandom();
     private static final int KEY_LENGTH = 16;
     private static final int VALUE_LENGTH = 1024;
 
@@ -50,9 +53,10 @@ abstract class TestBase {
 
     @NotNull
     static byte[] randomKey() {
-        final byte[] result = new byte[KEY_LENGTH];
-        ThreadLocalRandom.current().nextBytes(result);
-        return result;
+        StringBuilder sb = new StringBuilder(KEY_LENGTH);
+        for(int i = 0; i < KEY_LENGTH; i++)
+            sb.append(AB.charAt(rnd.nextInt(AB.length())));
+        return sb.toString().getBytes();
     }
 
     @NotNull

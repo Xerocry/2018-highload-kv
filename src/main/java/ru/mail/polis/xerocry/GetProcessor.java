@@ -69,7 +69,7 @@ public class GetProcessor extends RequestProcessor {
                 switch (response.getStatus()) {
                     case 200:
                         Value value = Value.fromBytes(response.getBody());
-                        timestampToValue.put(value.getTimestamp(), response.getBody());
+                        timestampToValue.put(value.getTimestamp(), value.getVal());
                         ackFound.getAndIncrement();
                         break;
                     case 404:

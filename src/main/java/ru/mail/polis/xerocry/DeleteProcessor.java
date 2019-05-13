@@ -23,7 +23,7 @@ public class DeleteProcessor extends RequestProcessor{
 
         if (!ackParms.isNeedRepl()) {
             try {
-                store.delete(id);
+                store.remove(id.getBytes());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -34,7 +34,7 @@ public class DeleteProcessor extends RequestProcessor{
 
         for (String replica : replicas) {
                 if (myReplica.equals(replica)) {
-                    store.delete(id);
+                    store.remove(id.getBytes());
                     ack++;
                 } else if (this.replicas.get(replica).delete("/v0/entity?id=" + id,  NEED_REPL_HEADER + ": 1").getStatus() == 202) {
                     ack++;

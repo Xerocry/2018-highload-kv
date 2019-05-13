@@ -20,6 +20,7 @@ import one.nio.http.Response;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.mail.polis.xerocry.Store;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,9 +45,9 @@ class ThreeNodeTest extends ClusterTestBase {
     private File data0;
     private File data1;
     private File data2;
-    private KVDao dao0;
-    private KVDao dao1;
-    private KVDao dao2;
+    private Store dao0;
+    private Store dao1;
+    private Store dao2;
     private KVService storage0;
     private KVService storage1;
     private KVService storage2;

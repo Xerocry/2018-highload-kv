@@ -19,14 +19,14 @@ public class PutProcessor extends RequestProcessor {
     }
 
     @Override
-    protected Response processRequest(AcknowledgeRequest ackParms, Request request) {
+    protected Response processRequest(AcknowledgeRequest ackParms, Request request) throws IOException {
 
         String id = ackParms.getId();
         byte[] value = request.getBody();
         AtomicInteger ack = new AtomicInteger();
 
         if (!ackParms.isNeedRepl()) {
-            store.put(id, value);
+            store.upsert(id.getBytes(), value);
             return new Response(Response.CREATED, Response.EMPTY);
         }
         List<String> replicas = getNodes(id, ackParms.getFrom());
@@ -34,7 +34,7 @@ public class PutProcessor extends RequestProcessor {
         for (String replica : replicas) {
             try {
                 if (myReplica.equals(replica)) {
-                    store.put(id, value);
+                    store.upsert(id.getBytes(), value);
                     ack.getAndIncrement();
                 } else if (this.replicas.get(replica).put("/v0/entity?id=" + id, value, NEED_REPL_HEADER + ": 1").getStatus() == 201) {
                     ack.getAndIncrement();

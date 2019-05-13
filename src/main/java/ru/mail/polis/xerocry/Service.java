@@ -49,7 +49,13 @@ public class Service extends HttpServer implements KVService {
         final String id = getID(request.getURI());
         final String replicas = getReplicas(request.getURI());
         log.debug("Got entity message with ID:" + id + " and replica: " + replicas);
-        AcknowledgeRequest ackParms = AcknowledgeRequest.fromRequest(request, topology.length, id, replicas);
+        AcknowledgeRequest ackParms;
+        try {
+            ackParms = AcknowledgeRequest.fromRequest(request, topology.length, id, replicas);
+        } catch (IllegalArgumentException e) {
+            session.sendError(Response.BAD_REQUEST, null);
+            return;
+        }
 
         try {
 //            if (replicas == null || replicas.isEmpty()) {
@@ -110,5 +116,10 @@ public class Service extends HttpServer implements KVService {
     @Override
     public void stop() {
         super.stop();
+    }
+
+    @Override
+    public void handleDefault(Request request, HttpSession session) throws IOException {
+        session.sendResponse(new Response(Response.BAD_REQUEST, Response.EMPTY));
     }
 }

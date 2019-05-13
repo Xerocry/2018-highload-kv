@@ -27,6 +27,7 @@ import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.function.Executable;
 import org.junit.platform.commons.util.ExceptionUtils;
+import ru.mail.polis.xerocry.Store;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,7 +48,7 @@ class StartStopTest extends TestBase {
 
     private int port;
     private File data;
-    private KVDao dao;
+    private Store dao;
     private KVService kvService;
     private HttpClient client;
 

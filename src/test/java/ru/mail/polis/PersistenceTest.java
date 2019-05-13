@@ -18,6 +18,7 @@ package ru.mail.polis;
 
 
 import org.junit.jupiter.api.Test;
+import ru.mail.polis.xerocry.Store;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,7 +43,7 @@ class PersistenceTest extends TestBase {
 
         // Create, fill and remove storage
         final File data = Files.createTempDirectory();
-        try (final KVDao dao = KVDaoFactory.create(data)) {
+        try (final Store dao = KVDaoFactory.create(data)) {
             dao.upsert(key, randomValue());
         } finally {
             Files.recursiveDelete(data);
@@ -51,7 +52,7 @@ class PersistenceTest extends TestBase {
         // Check that the storage is empty
         assertFalse(data.exists());
         assertTrue(data.mkdir());
-        try(final KVDao dao = KVDaoFactory.create(data)) {
+        try(final Store dao = KVDaoFactory.create(data)) {
             assertThrows(NoSuchElementException.class, () -> dao.get(key));
         } finally {
             Files.recursiveDelete(data);
@@ -64,12 +65,12 @@ class PersistenceTest extends TestBase {
         final byte[] key = randomKey();
         final byte[] value = randomValue();
         final File data = Files.createTempDirectory();
-        try (KVDao dao = KVDaoFactory.create(data)) {
+        try (Store dao = KVDaoFactory.create(data)) {
             // Create, fill and close storage
             dao.upsert(key, value);
         }
         // Recreate dao
-        try (KVDao dao = KVDaoFactory.create(data)) {
+        try (Store dao = KVDaoFactory.create(data)) {
             assertArrayEquals(value, dao.get(key));
         } finally {
             Files.recursiveDelete(data);

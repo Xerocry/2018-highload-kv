@@ -17,9 +17,9 @@
 package ru.mail.polis;
 
 import org.jetbrains.annotations.NotNull;
+import ru.mail.polis.xerocry.Store;
 
 import java.io.File;
-import java.io.IOException;
 
 /**
  * Custom {@link KVDao} factory
@@ -40,7 +40,7 @@ final class KVDaoFactory {
      * @return a storage instance
      */
     @NotNull
-    static KVDao create(@NotNull final File data) {
+    static Store create(@NotNull final File data) {
         if (Runtime.getRuntime().maxMemory() > MAX_HEAP) {
             throw new IllegalStateException("The heap is too big. Consider setting Xmx.");
         }
@@ -53,7 +53,6 @@ final class KVDaoFactory {
             throw new IllegalArgumentException("Path is not a directory: " + data);
         }
 
-        // TODO: Implement me
-        throw new UnsupportedOperationException("Implement me!");
+        return new Store(data);
     }
 }
