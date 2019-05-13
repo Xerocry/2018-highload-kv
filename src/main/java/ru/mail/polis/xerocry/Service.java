@@ -3,6 +3,7 @@ package ru.mail.polis.xerocry;
 import lombok.extern.slf4j.Slf4j;
 import one.nio.http.*;
 import one.nio.net.ConnectionString;
+import one.nio.pool.PoolException;
 import org.jetbrains.annotations.NotNull;
 import ru.mail.polis.KVService;
 
@@ -13,7 +14,7 @@ import java.util.regex.Pattern;
 
 @Slf4j
 public class Service extends HttpServer implements KVService {
-    private String[] topology;
+    Map<String, HttpClient> cluster = new HashMap<>();
 
     private final PutProcessor putProcessor;
     private final DeleteProcessor deleteProcessor;
@@ -24,15 +25,13 @@ public class Service extends HttpServer implements KVService {
 
     public Service(HttpServerConfig config, @NotNull Store store, Set<String> topology) throws IOException {
         super(config);
-        this.topology = topology.toArray(new String[0]);
-        Map<String, HttpClient> cluster = new HashMap<>();
         for (String str : topology) {
-                cluster.put(str, new HttpClient(new ConnectionString(str)));
+            cluster.put(str, new HttpClient(new ConnectionString(str)));
         }
         String replica = topology.stream().filter(r -> r.indexOf(":" + port) > 0).findFirst().get();
-        putProcessor = new PutProcessor(store, cluster, this.topology, replica);
-        getProcessor = new GetProcessor(store, cluster, this.topology, replica);
-        deleteProcessor = new DeleteProcessor(store, cluster, this.topology, replica);
+        putProcessor = new PutProcessor(store, cluster, replica);
+        getProcessor = new GetProcessor(store, cluster, replica);
+        deleteProcessor = new DeleteProcessor(store, cluster, replica);
     }
 
     @Path("/v0/status")
@@ -45,31 +44,22 @@ public class Service extends HttpServer implements KVService {
     }
 
     @Path("/v0/entity")
-    public void entity(Request request, HttpSession session) throws IOException {
-        final String id = getID(request.getURI());
-        final String replicas = getReplicas(request.getURI());
-        log.debug("Got entity message with ID:" + id + " and replica: " + replicas);
+    public void entity(Request request, HttpSession session) throws IOException{
         AcknowledgeRequest ackParms;
         try {
-            ackParms = AcknowledgeRequest.fromRequest(request, topology.length, id, replicas);
+            final String id = getID(request.getURI());
+            final String replicas = getReplicas(request.getURI());
+            ackParms = AcknowledgeRequest.fromRequest(request, cluster.size(), id, replicas);
         } catch (IllegalArgumentException e) {
             session.sendError(Response.BAD_REQUEST, null);
             return;
         }
 
         try {
-//            if (replicas == null || replicas.isEmpty()) {
-//                session.sendError(Response.BAD_REQUEST, null);
-//                return;
-//            }
             switch (request.getMethod()) {
                 case Request.METHOD_GET:
-                    try {
-                        log.debug("GET Message!");
-                        session.sendResponse(getProcessor.process(ackParms, request));
-                    } catch (NoSuchElementException e) {
-                        session.sendError(Response.BAD_REQUEST, null);
-                    }
+                    log.debug("GET Message!");
+                    session.sendResponse(getProcessor.process(ackParms, request));
                     break;
                 case Request.METHOD_PUT:
                     log.debug("PUT Message!");
@@ -83,12 +73,9 @@ public class Service extends HttpServer implements KVService {
                     log.error("Not-defined message type!");
                     session.sendError(Response.METHOD_NOT_ALLOWED, "Unsupported method");
             }
-        } catch (NoSuchElementException nSEE) {
+        } catch (Exception nSEE) {
             nSEE.printStackTrace();
             session.sendError(Response.NOT_FOUND, null);
-        } catch (Exception e) {
-            e.printStackTrace();
-            session.sendError(Response.INTERNAL_ERROR, null);
         }
     }
 

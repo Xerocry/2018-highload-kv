@@ -16,12 +16,12 @@ public class GetProcessor extends RequestProcessor {
 
     private final static String TIMESTAMP_HEADER = "X-Timestamp";
 
-    GetProcessor(Store store, Map<String, HttpClient> replicas, String[] topology, String myReplica) {
-        super(store, replicas, topology, myReplica);
+    GetProcessor(Store store, Map<String, HttpClient> replicas, String myReplica) {
+        super(store, replicas, myReplica);
     }
 
     @Override
-    protected Response processRequest(AcknowledgeRequest ackParms, Request request) throws InterruptedException, IOException, HttpException, PoolException {
+    protected Response processRequest(AcknowledgeRequest ackParms, Request request) throws IOException {
         String id = ackParms.getId();
         AtomicInteger ackFound = new AtomicInteger();
         AtomicInteger ackNotFound = new AtomicInteger();
@@ -32,15 +32,9 @@ public class GetProcessor extends RequestProcessor {
         if (!ackParms.isNeedRepl()) {
             try {
                 Value node = store.getAsValue(id);
-//                if (node.isMilestone()) {
-//                    Response response = new Response(Response.GATEWAY_TIMEOUT, Response.EMPTY);
-//                    response.addHeader(TIMESTAMP_HEADER + ": " + node.getTimestamp());
-//                    return response;
-//                } else {
-                    Response response = new Response(Response.OK, node.toBytes());
-                    response.addHeader(TIMESTAMP_HEADER + ": " + node.getTimestamp());
-                    return response;
-//                }
+                Response response = new Response(Response.OK, node.toBytes());
+                response.addHeader(TIMESTAMP_HEADER + ": " + node.getTimestamp());
+                return response;
             } catch (NoSuchElementException e) {
                 return new Response(Response.NOT_FOUND, Response.EMPTY);
             }
@@ -49,47 +43,55 @@ public class GetProcessor extends RequestProcessor {
         List<String> replicas = getNodes(id, ackParms.getFrom());
 
         for (String replica : replicas) {
-            if (replica.equals(myReplica)) {
-                try {
-                    timestampToValue.put(store.getAsValue(id).getTimestamp(), store.getAsValue(id).getVal());
-                    ackFound.getAndIncrement();
-                } catch (NoSuchElementException e) {
+            try {
+                if (replica.equals(myReplica)) {
                     try {
+                        timestampToValue.put(store.getAsValue(id).getTimestamp(), store.getAsValue(id).getVal());
+                        ackFound.getAndIncrement();
+                    } catch (NoSuchElementException e) {
                         if (store.isDeleted(id)) {
                             ackDeleted.getAndIncrement();
                         } else {
                             ackNotFound.getAndIncrement();
                         }
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
+                    }
+                } else {
+                    Response response = getRequest(this.replicas.get(replica), id);
+                    switch (response.getStatus()) {
+                        case 200:
+                            Value value = Value.fromBytes(response.getBody());
+                            timestampToValue.put(value.getTimestamp(), value.getVal());
+                            ackFound.getAndIncrement();
+                            break;
+                        case 404:
+                            if (store.isDeleted(id)) {
+                                ackDeleted.getAndIncrement();
+                            } else {
+                                ackNotFound.getAndIncrement();
+                            }
+                            break;
                     }
                 }
-            } else {
-                Response response = this.replicas.get(replica).get("/v0/entity?id=" + id, NEED_REPL_HEADER + ": 1");
-                switch (response.getStatus()) {
-                    case 200:
-                        Value value = Value.fromBytes(response.getBody());
-                        timestampToValue.put(value.getTimestamp(), value.getVal());
-                        ackFound.getAndIncrement();
-                        break;
-                    case 404:
-                        if (store.isDeleted(id)) {
-                            ackDeleted.getAndIncrement();
-                        } else {
-                            ackNotFound.getAndIncrement();
-                        }
-                        break;
-                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
 
         if (ackNotFound.get() + ackDeleted.get() + ackFound.get() < ackParms.getAck()) {
             return new Response(Response.GATEWAY_TIMEOUT, Response.EMPTY);
-        } else if (ackFound.get() >= ackParms.getAck() && ackDeleted.get() == 0) {
+        } else if (ackFound.get() > 0 && ackDeleted.get() == 0 && ackNotFound.get() == 0) {
             byte[] maxTimestampValue = timestampToValue.entrySet().stream().max(Comparator.comparingLong(Map.Entry::getKey)).get().getValue();
             return Response.ok(maxTimestampValue);
         } else {
             return new Response(Response.NOT_FOUND, Response.EMPTY);
+        }
+    }
+
+    private Response getRequest(HttpClient client, String key) throws IOException {
+        try {
+            return client.get("/v0/entity?id=" + key, NEED_REPL_HEADER + ": 1");
+        } catch (Exception e) {
+            throw new IOException(e);
         }
     }
 

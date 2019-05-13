@@ -7,7 +7,6 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
-import java.util.Arrays;
 import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -37,20 +36,20 @@ public class Store implements KVDao {
             Files.readAllBytes(file.toPath());
             final FileInputStream stream = new FileInputStream(file);
             Value valueWrapped = Value.fromBytes(Util.getData(stream));
+            stream.close();
             return valueWrapped.isDeleted();
         } catch (NoSuchFileException e) {
             return false;
         }
-
     }
-
 
     Value getAsValue(String key) throws NoSuchElementException {
         try {
-            final File file = new File(path, key);
+            final File file = new File(path, checkKey(key));
             if (file.exists()) {
                 try (final FileInputStream stream = new FileInputStream(file)) {
                     Value value = Value.fromBytes(Util.getData(stream));
+                    stream.close();
                     if (value.isDeleted()) {
                         throw new NoSuchElementException();
                     }
@@ -73,7 +72,7 @@ public class Store implements KVDao {
 
     public void upsert(@NotNull byte[] key, @NotNull byte[] val) throws IOException {
         try {
-            Value value = new Value(val, System.currentTimeMillis(), false, false);
+            Value value = new Value(val, System.currentTimeMillis(), false);
             final File file = new File(path, checkKey(new String(key, StandardCharsets.UTF_8)));
             final FileOutputStream stream = new FileOutputStream(file);
             stream.write(value.toBytes());
@@ -85,10 +84,14 @@ public class Store implements KVDao {
 
     @Override
     public void remove(@NotNull byte[] key) throws IOException {
-        Value value = new Value(new byte[0], System.currentTimeMillis(), false, true);
-        final File file = new File(path, new String(key, StandardCharsets.UTF_8));
+        try {
+        Value value = new Value(new byte[0], System.currentTimeMillis(), true);
+        final File file = new File(path, checkKey(new String(key, StandardCharsets.UTF_8)));
         final FileOutputStream stream = new FileOutputStream(file);
         stream.write(value.toBytes());
         stream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

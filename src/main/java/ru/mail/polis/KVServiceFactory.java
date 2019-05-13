@@ -62,6 +62,8 @@ final class KVServiceFactory {
         }
         HttpServerConfig config = new HttpServerConfig();
         AcceptorConfig acceptorConfig = new AcceptorConfig();
+        config.maxWorkers = 12;
+        config.minWorkers = 12;
         acceptorConfig.port = port;
         config.acceptors = new AcceptorConfig[]{acceptorConfig};
 //        return new Service(config, dao, topology);

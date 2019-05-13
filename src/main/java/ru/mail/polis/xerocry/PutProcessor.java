@@ -14,8 +14,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 public class PutProcessor extends RequestProcessor {
 
-    PutProcessor(Store store, Map<String, HttpClient> replicas, String[] topology, String myReplica) {
-        super(store, replicas, topology, myReplica);
+    PutProcessor(Store store, Map<String, HttpClient> replicas, String myReplica) {
+        super(store, replicas, myReplica);
     }
 
     @Override
@@ -39,7 +39,7 @@ public class PutProcessor extends RequestProcessor {
                 } else if (this.replicas.get(replica).put("/v0/entity?id=" + id, value, NEED_REPL_HEADER + ": 1").getStatus() == 201) {
                     ack.getAndIncrement();
                 }
-            } catch (IOException | InterruptedException | HttpException | PoolException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
 

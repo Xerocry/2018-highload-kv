@@ -8,13 +8,11 @@ import java.nio.ByteBuffer;
 class Value {
     private final byte[] val;
     private long timestamp;
-    private boolean milestone;
     private final boolean deleted;
 
-    Value(byte[] val, long timestamp, boolean milestone, boolean deleted) {
+    Value(byte[] val, long timestamp, boolean deleted) {
         this.val = val;
         this.timestamp = timestamp;
-        this.milestone = milestone;
         this.deleted = deleted;
     }
 
@@ -24,7 +22,7 @@ class Value {
         boolean deleted = buffer.get() > 0;
         byte[] value = new byte[data.length - Long.BYTES - Byte.BYTES];
         buffer.get(value);
-        return new Value(value, timestamp, false, deleted);
+        return new Value(value, timestamp, deleted);
     }
 
     byte[] toBytes() {
