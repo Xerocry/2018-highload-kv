@@ -24,6 +24,19 @@ dependencies {
 
     // Guava for tests
     testCompile("com.google.guava:guava:23.1-jre")
+
+    compileOnly("org.projectlombok:lombok:1.18.6")
+
+//    compile("org.apache.logging.log4j:log4j-slf4j-impl:2.5")
+//    compile("org.apache.logging.log4j:log4j-api:2.5")
+//    compile("org.apache.logging.log4j:log4j-core:2.5")
+
+    compile("org.slf4j:slf4j-api:1.7.25")
+    compile("ch.qos.logback:logback-classic:1.2.3")
+
+    compile("org.rocksdb:rocksdbjni:6.0.1")
+
+    annotationProcessor("org.projectlombok:lombok:1.18.6")
 }
 
 tasks {

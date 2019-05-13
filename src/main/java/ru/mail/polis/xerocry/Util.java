@@ -3,13 +3,11 @@ package ru.mail.polis.xerocry;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
-public class Util {
-
+class Util {
     private final static int BUF_SIZE = 1024;
 
-
-    public static byte[] getData(final InputStream is) {
-        final byte buf[] = new byte[BUF_SIZE];
+    static byte[] getData(final InputStream is) {
+        final byte[] buf = new byte[BUF_SIZE];
 
         try (final ByteArrayOutputStream os = new ByteArrayOutputStream()){
             int j;

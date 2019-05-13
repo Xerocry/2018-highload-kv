@@ -27,7 +27,7 @@ import java.util.Set;
  * @author Vadim Tsesko <mail@incubos.org>
  */
 public final class Cluster {
-    private static final int[] PORTS = {8080, 8081, 8082};
+    private static final int[] PORTS = {8060, 8061, 8062};
 
     private Cluster() {
         // Not instantiable
@@ -44,7 +44,6 @@ public final class Cluster {
         for (int i = 0; i < PORTS.length; i++) {
             final int port = PORTS[i];
             final File data = Files.createTempDirectory();
-            final KVDao dao = KVDaoFactory.create(data);
 
             System.out.println("Starting node " + i + " on port " + port + " and data at " + data);
 
@@ -56,14 +55,7 @@ public final class Cluster {
                             topology);
             storage.start();
             Runtime.getRuntime().addShutdownHook(
-                    new Thread(() -> {
-                        storage.stop();
-                        try {
-                            dao.close();
-                        } catch (IOException e) {
-                            throw new RuntimeException("Can't close dao", e);
-                        }
-                    }));
+                    new Thread(storage::stop));
         }
     }
 }

@@ -43,12 +43,14 @@ final class KVServiceFactory {
      *
      * @param port     port to bind HTTP server to
      * @param data      DAO to store the data
+//     * @param dao      DAO to store the data
      * @param topology a list of all cluster endpoints {@code http://<host>:<port>} (including this one)
      * @return a storage instance
      */
     @NotNull
     static KVService create(
             final int port,
+//            @NotNull final KVDao dao,
             @NotNull final File data,
             @NotNull final Set<String> topology) throws IOException {
         if (Runtime.getRuntime().maxMemory() > MAX_HEAP) {
@@ -62,6 +64,7 @@ final class KVServiceFactory {
         AcceptorConfig acceptorConfig = new AcceptorConfig();
         acceptorConfig.port = port;
         config.acceptors = new AcceptorConfig[]{acceptorConfig};
-        return new Service(config, new Store(data));
+//        return new Service(config, dao, topology);
+        return new Service(config, new Store(data), topology);
     }
 }

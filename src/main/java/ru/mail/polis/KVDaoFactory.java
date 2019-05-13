@@ -40,7 +40,7 @@ final class KVDaoFactory {
      * @return a storage instance
      */
     @NotNull
-    static KVDao create(@NotNull final File data) throws IOException {
+    static KVDao create(@NotNull final File data) {
         if (Runtime.getRuntime().maxMemory() > MAX_HEAP) {
             throw new IllegalStateException("The heap is too big. Consider setting Xmx.");
         }
