@@ -20,11 +20,11 @@ public class Store implements KVDao {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
     }
 
     private String checkKey(String key) throws IOException {
-        final Pattern pattern = Pattern.compile("\\w*");
+        final Pattern pattern = Pattern.compile("\\w*", Pattern.UNICODE_CHARACTER_CLASS);
         final Matcher matcher = pattern.matcher(key);
         if (matcher.matches()) return key;
         else throw new IOException("Incorrect key: " + key);

@@ -1,10 +1,8 @@
 package ru.mail.polis.xerocry;
 
 import one.nio.http.HttpClient;
-import one.nio.http.HttpException;
 import one.nio.http.Request;
 import one.nio.http.Response;
-import one.nio.pool.PoolException;
 
 import java.io.IOException;
 import java.util.List;
@@ -30,7 +28,7 @@ public class DeleteProcessor extends RequestProcessor {
             return new Response(Response.ACCEPTED, Response.EMPTY);
         }
 
-        List<String> replicas = getNodes(id, ackParms.getAck());
+        List<String> replicas = getNodes(id, ackParms.getFrom());
 
         for (String replica : replicas) {
             try {

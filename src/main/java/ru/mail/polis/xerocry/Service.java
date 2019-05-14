@@ -3,7 +3,6 @@ package ru.mail.polis.xerocry;
 import lombok.extern.slf4j.Slf4j;
 import one.nio.http.*;
 import one.nio.net.ConnectionString;
-import one.nio.pool.PoolException;
 import org.jetbrains.annotations.NotNull;
 import ru.mail.polis.KVService;
 
@@ -14,7 +13,7 @@ import java.util.regex.Pattern;
 
 @Slf4j
 public class Service extends HttpServer implements KVService {
-    Map<String, HttpClient> cluster = new HashMap<>();
+    private Map<String, HttpClient> cluster = new HashMap<>();
 
     private final PutProcessor putProcessor;
     private final DeleteProcessor deleteProcessor;

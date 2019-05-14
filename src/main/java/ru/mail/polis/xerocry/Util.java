@@ -7,7 +7,7 @@ class Util {
     private final static int BUF_SIZE = 1024;
 
     static byte[] getData(final InputStream is) {
-        final byte[] buf = new byte[BUF_SIZE];
+        final byte[] buf = new byte[Long.BYTES + Byte.BYTES + BUF_SIZE];
 
         try (final ByteArrayOutputStream os = new ByteArrayOutputStream()){
             int j;

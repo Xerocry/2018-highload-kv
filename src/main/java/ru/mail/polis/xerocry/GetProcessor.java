@@ -2,10 +2,8 @@ package ru.mail.polis.xerocry;
 
 import lombok.extern.slf4j.Slf4j;
 import one.nio.http.HttpClient;
-import one.nio.http.HttpException;
 import one.nio.http.Request;
 import one.nio.http.Response;
-import one.nio.pool.PoolException;
 
 import java.io.IOException;
 import java.util.*;
@@ -13,8 +11,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 public class GetProcessor extends RequestProcessor {
-
-    private final static String TIMESTAMP_HEADER = "X-Timestamp";
 
     GetProcessor(Store store, Map<String, HttpClient> replicas, String myReplica) {
         super(store, replicas, myReplica);
@@ -31,12 +27,15 @@ public class GetProcessor extends RequestProcessor {
 
         if (!ackParms.isNeedRepl()) {
             try {
-                Value node = store.getAsValue(id);
-                Response response = new Response(Response.OK, node.toBytes());
-                response.addHeader(TIMESTAMP_HEADER + ": " + node.getTimestamp());
-                return response;
+                return new Response(Response.OK, store.getAsValue(id).toBytes());
             } catch (NoSuchElementException e) {
-                return new Response(Response.NOT_FOUND, Response.EMPTY);
+                try {
+                    if (store.isDeleted(id)) {
+                        return new Response(Response.FORBIDDEN, Response.EMPTY);
+                    } else return new Response(Response.NOT_FOUND, Response.EMPTY);
+                } catch (IOException e1) {
+                    return new Response(Response.INTERNAL_ERROR, Response.EMPTY);
+                }
             }
         }
 
@@ -46,14 +45,15 @@ public class GetProcessor extends RequestProcessor {
             try {
                 if (replica.equals(myReplica)) {
                     try {
-                        timestampToValue.put(store.getAsValue(id).getTimestamp(), store.getAsValue(id).getVal());
-                        ackFound.getAndIncrement();
+                        timestampToValue.put(store.getAsValue(id).getTimestamp(), store.get(id.getBytes()));
+                        ackFound.incrementAndGet();
                     } catch (NoSuchElementException e) {
                         if (store.isDeleted(id)) {
-                            ackDeleted.getAndIncrement();
+                            ackDeleted.incrementAndGet();
                         } else {
-                            ackNotFound.getAndIncrement();
+                            ackNotFound.incrementAndGet();
                         }
+                        ackFound.incrementAndGet();
                     }
                 } else {
                     Response response = getRequest(this.replicas.get(replica), id);
@@ -61,29 +61,35 @@ public class GetProcessor extends RequestProcessor {
                         case 200:
                             Value value = Value.fromBytes(response.getBody());
                             timestampToValue.put(value.getTimestamp(), value.getVal());
-                            ackFound.getAndIncrement();
                             break;
                         case 404:
-                            if (store.isDeleted(id)) {
-                                ackDeleted.getAndIncrement();
-                            } else {
-                                ackNotFound.getAndIncrement();
-                            }
+                            ackNotFound.incrementAndGet();
+                            break;
+                        case 403:
+                            ackDeleted.getAndIncrement();
+                            break;
+                        default:
+                            log.info("GET def" + ":" + response.getStatus());
                             break;
                     }
+                    ackFound.incrementAndGet();
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
-        if (ackNotFound.get() + ackDeleted.get() + ackFound.get() < ackParms.getAck()) {
-            return new Response(Response.GATEWAY_TIMEOUT, Response.EMPTY);
-        } else if (ackFound.get() > 0 && ackDeleted.get() == 0 && ackNotFound.get() == 0) {
-            byte[] maxTimestampValue = timestampToValue.entrySet().stream().max(Comparator.comparingLong(Map.Entry::getKey)).get().getValue();
-            return Response.ok(maxTimestampValue);
+
+        if (ackFound.get() >= ackParms.getAck()) {
+            if (ackNotFound.get() == ackFound.get() || ackDeleted.get() > 0) {
+                return new Response(Response.NOT_FOUND, Response.EMPTY);
+            } else if (timestampToValue.entrySet().stream().max(Comparator.comparingLong(Map.Entry::getKey)).get().getValue() != null) {
+                return Response.ok(timestampToValue.entrySet().stream().max(Comparator.comparingLong(Map.Entry::getKey)).get().getValue());
+            } else {
+                return new Response(Response.GATEWAY_TIMEOUT, Response.EMPTY);
+            }
         } else {
-            return new Response(Response.NOT_FOUND, Response.EMPTY);
+            return new Response(Response.GATEWAY_TIMEOUT, Response.EMPTY);
         }
     }
 
@@ -94,5 +100,4 @@ public class GetProcessor extends RequestProcessor {
             throw new IOException(e);
         }
     }
-
 }

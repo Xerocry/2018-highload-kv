@@ -2,10 +2,8 @@ package ru.mail.polis.xerocry;
 
 import lombok.extern.slf4j.Slf4j;
 import one.nio.http.HttpClient;
-import one.nio.http.HttpException;
 import one.nio.http.Request;
 import one.nio.http.Response;
-import one.nio.pool.PoolException;
 
 import java.io.IOException;
 import java.util.*;
@@ -36,7 +34,7 @@ public class PutProcessor extends RequestProcessor {
                 if (myReplica.equals(replica)) {
                     store.upsert(id.getBytes(), value);
                     ack.getAndIncrement();
-                } else if (this.replicas.get(replica).put("/v0/entity?id=" + id, value, NEED_REPL_HEADER + ": 1").getStatus() == 201) {
+                } else if (putRequest(this.replicas.get(replica), value, id).getStatus() == 201) {
                     ack.getAndIncrement();
                 }
             } catch (Exception e) {
@@ -48,6 +46,15 @@ public class PutProcessor extends RequestProcessor {
         return ack.get() >= ackParms.getAck()
                 ? new Response(Response.CREATED, Response.EMPTY)
                 : new Response(Response.GATEWAY_TIMEOUT, Response.EMPTY);
+    }
+
+    private Response putRequest(HttpClient client, byte[] value, String key) throws IOException {
+        try {
+            return client.put("/v0/entity?id=" + key, value,NEED_REPL_HEADER + ": 1");
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IOException(e);
+        }
     }
 
 }

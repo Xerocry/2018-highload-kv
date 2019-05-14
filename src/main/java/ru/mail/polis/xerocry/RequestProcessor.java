@@ -11,7 +11,6 @@ abstract public class RequestProcessor {
     final static String NEED_REPL_HEADER = "X-Need-Repl";
 
     final Store store;
-//    private final String[] topology;
     Map<String, HttpClient> replicas;
     final String myReplica;
 
@@ -22,7 +21,6 @@ abstract public class RequestProcessor {
     RequestProcessor(Store store, Map<String, HttpClient> replicas, String myReplica) {
         this.store = store;
         this.replicas = replicas;
-//        this.topology = topology;
         this.myReplica = myReplica;
     }
 
