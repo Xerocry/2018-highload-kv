@@ -36,7 +36,9 @@ Transfer/sec:     20.12KB
 Сделаем новые замеры. 
 
 #После модификации
+
 ## Метод PUT
+
 ### Утилита wrk
 ```
 ./wrk --latency -c4 -t4 -d1m -s ../scripts/put.lua http://localhost:8060
