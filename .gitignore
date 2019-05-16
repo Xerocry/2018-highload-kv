@@ -4,6 +4,11 @@
 # But not Java files...
 !.gitignore
 !*.java
+!*.lua
+!*.JPG
 
 # ...even if they are in subdirectories
 !*/
+
+wrk/
+!/LOADTEST.md

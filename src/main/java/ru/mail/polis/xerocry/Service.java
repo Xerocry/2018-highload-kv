@@ -57,19 +57,20 @@ public class Service extends HttpServer implements KVService {
         try {
             switch (request.getMethod()) {
                 case Request.METHOD_GET:
-                    log.debug("GET Message!");
+//                    log.debug("GET Message!");
                     session.sendResponse(getProcessor.process(ackParms, request));
                     break;
                 case Request.METHOD_PUT:
-                    log.debug("PUT Message!");
+//                    log.debug("----------------PUT Message!------------------------");
                     session.sendResponse(putProcessor.process(ackParms, request));
+//                    log.debug("----------------------------------------------------");
                     break;
                 case Request.METHOD_DELETE:
-                    log.debug("DELETE Message!");
+//                    log.debug("DELETE Message!");
                     session.sendResponse(deleteProcessor.process(ackParms, request));
                     break;
                 default:
-                    log.error("Not-defined message type!");
+//                    log.error("Not-defined message type!");
                     session.sendError(Response.METHOD_NOT_ALLOWED, "Unsupported method");
             }
         } catch (Exception nSEE) {

@@ -29,13 +29,9 @@ public class GetProcessor extends RequestProcessor {
             try {
                 return new Response(Response.OK, store.getAsValue(id).toBytes());
             } catch (NoSuchElementException e) {
-                try {
-                    if (store.isDeleted(id)) {
-                        return new Response(Response.FORBIDDEN, Response.EMPTY);
-                    } else return new Response(Response.NOT_FOUND, Response.EMPTY);
-                } catch (IOException e1) {
-                    return new Response(Response.INTERNAL_ERROR, Response.EMPTY);
-                }
+                if (store.isDeleted(id)) {
+                    return new Response(Response.FORBIDDEN, Response.EMPTY);
+                } else return new Response(Response.NOT_FOUND, Response.EMPTY);
             }
         }
 
