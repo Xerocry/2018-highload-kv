@@ -1,97 +1,59 @@
 package ru.mail.polis.xerocry;
 
+import org.iq80.leveldb.DB;
+import org.iq80.leveldb.Options;
+import org.iq80.leveldb.impl.Iq80DBFactory;
 import org.jetbrains.annotations.NotNull;
 import ru.mail.polis.KVDao;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.util.NoSuchElementException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class Store implements KVDao {
 
-    private final File path;
+    private final DB db;
 
-    public Store(File dir) {
-        path = dir;
+    public Store(File dir) throws IOException {
+        Options options = new Options();
+        options.createIfMissing(true);
+        db = Iq80DBFactory.factory.open(dir, options);
     }
 
     @Override
     public void close() {
     }
 
-    private String checkKey(String key) throws IOException {
-        final Pattern pattern = Pattern.compile("\\w*", Pattern.UNICODE_CHARACTER_CLASS);
-        final Matcher matcher = pattern.matcher(key);
-        if (matcher.matches()) return key;
-        else throw new IOException("Incorrect key: " + key);
-    }
-
-    boolean isDeleted(String key) throws IOException {
-        try {
-            final File file = new File(path, key);
-            Files.readAllBytes(file.toPath());
-            final FileInputStream stream = new FileInputStream(file);
-            Value valueWrapped = Value.fromBytes(Util.getData(stream));
-            stream.close();
-            return valueWrapped.isDeleted();
-        } catch (NoSuchFileException e) {
-            return false;
-        }
+    boolean isDeleted(String key) {
+        Value value = Value.fromBytes(db.get(key.getBytes()));
+        if (value.getVal() == null) {
+            throw new NoSuchElementException();
+        } else return value.isDeleted();
     }
 
     Value getAsValue(String key) throws NoSuchElementException {
-        try {
-            final File file = new File(path, checkKey(key));
-            if (file.exists()) {
-                try (final FileInputStream stream = new FileInputStream(file)) {
-                    Value value = Value.fromBytes(Util.getData(stream));
-                    stream.close();
-                    if (value.isDeleted()) {
-                        throw new NoSuchElementException();
-                    }
-                    return value;
-                }
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
+        byte[] value = db.get(key.getBytes());
+        if (value == null) {
+            throw new NoSuchElementException("No such element");
         }
-        throw new NoSuchElementException("No such element");
+        return Value.fromBytes(value);
     }
 
     @NotNull
     @Override
-    public byte[] get(@NotNull byte[] key) throws NoSuchElementException, IOException {
+    public byte[] get(@NotNull byte[] key) throws NoSuchElementException {
         return getAsValue(new String(key, StandardCharsets.UTF_8)).getVal();
     }
 
 
-    public void upsert(@NotNull byte[] key, @NotNull byte[] val) throws IOException {
-        try {
-            Value value = new Value(val, System.currentTimeMillis(), false);
-            final File file = new File(path, checkKey(new String(key, StandardCharsets.UTF_8)));
-            final FileOutputStream stream = new FileOutputStream(file);
-            stream.write(value.toBytes());
-            stream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void upsert(@NotNull byte[] key, @NotNull byte[] val) {
+        Value value = new Value(val, System.currentTimeMillis(), false);
+        db.put(key, value.toBytes());
     }
 
     @Override
-    public void remove(@NotNull byte[] key) throws IOException {
-        try {
+    public void remove(@NotNull byte[] key) {
         Value value = new Value(new byte[0], System.currentTimeMillis(), true);
-        final File file = new File(path, checkKey(new String(key, StandardCharsets.UTF_8)));
-        final FileOutputStream stream = new FileOutputStream(file);
-        stream.write(value.toBytes());
-        stream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        db.put(key, value.toBytes());
     }
 }
