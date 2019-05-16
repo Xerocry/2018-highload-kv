@@ -55,11 +55,11 @@ class TwoNodeTest extends ClusterTestBase {
         endpoints = new LinkedHashSet<>(Arrays.asList(endpoint(port0), endpoint(port1)));
         data0 = Files.createTempDirectory();
         dao0 = KVDaoFactory.create(data0);
-        storage0 = KVServiceFactory.create(port0, data0, endpoints);
+        storage0 = KVServiceFactory.create(port0, dao0, endpoints);
         storage0.start();
         data1 = Files.createTempDirectory();
         dao1 = KVDaoFactory.create(data1);
-        storage1 = KVServiceFactory.create(port1, data1, endpoints);
+        storage1 = KVServiceFactory.create(port1, dao1, endpoints);
         start(1, storage1);
     }
 
@@ -171,7 +171,7 @@ class TwoNodeTest extends ClusterTestBase {
             assertEquals(201, upsert(0, key, value, 1, 2).getStatus());
 
             // Start node 1
-            storage1 = KVServiceFactory.create(port1, data1, endpoints);
+            storage1 = KVServiceFactory.create(port1, dao1, endpoints);
             start(1, storage1);
 
             // Check
@@ -200,7 +200,7 @@ class TwoNodeTest extends ClusterTestBase {
             assertEquals(202, delete(1, key, 1, 2).getStatus());
 
             // Start node 0
-            storage0 = KVServiceFactory.create(port0, data0, endpoints);
+            storage0 = KVServiceFactory.create(port0, dao0, endpoints);
             start(0, storage0);
 
             // Check
@@ -229,7 +229,7 @@ class TwoNodeTest extends ClusterTestBase {
             }
 
             // Start node 0
-            storage0 = KVServiceFactory.create(port0, data0, endpoints);
+            storage0 = KVServiceFactory.create(port0, dao0, endpoints);
             start(0, storage0);
 
             // Stop node 1
@@ -241,7 +241,7 @@ class TwoNodeTest extends ClusterTestBase {
             }
 
             // Start node 1
-            storage1 = KVServiceFactory.create(port1, data1, endpoints);
+            storage1 = KVServiceFactory.create(port1, dao1, endpoints);
             start(1, storage1);
 
             // Check

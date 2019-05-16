@@ -37,21 +37,21 @@ public final class Server {
         final File data = Files.createTempDirectory();
 
         // Start the storage
-//        final KVDao dao = KVDaoFactory.create(data);
+        final KVDao dao = KVDaoFactory.create(data);
         final KVService storage =
                 KVServiceFactory.create(
                         PORT,
-                        data,
+                        dao,
                         Collections.singleton("http://localhost:" + PORT));
         storage.start();
-//        Runtime.getRuntime().addShutdownHook(
-//                new Thread(() -> {
-//                    storage.stop();
-//                    try {
-//                        dao.close();
-//                    } catch (IOException e) {
-//                        throw new RuntimeException("Can't close dao", e);
-//                    }
-//                }));
+        Runtime.getRuntime().addShutdownHook(
+                new Thread(() -> {
+                    storage.stop();
+                    try {
+                        dao.close();
+                    } catch (IOException e) {
+                        throw new RuntimeException("Can't close dao", e);
+                    }
+                }));
     }
 }

@@ -50,8 +50,8 @@ final class KVServiceFactory {
     @NotNull
     static KVService create(
             final int port,
-//            @NotNull final KVDao dao,
-            @NotNull final File data,
+            @NotNull final KVDao dao,
+//            @NotNull final File data,
             @NotNull final Set<String> topology) throws IOException {
         if (Runtime.getRuntime().maxMemory() > MAX_HEAP) {
             throw new IllegalStateException("The heap is too big. Consider setting Xmx.");
@@ -66,7 +66,7 @@ final class KVServiceFactory {
         config.minWorkers = 12;
         acceptorConfig.port = port;
         config.acceptors = new AcceptorConfig[]{acceptorConfig};
-//        return new Service(config, dao, topology);
-        return new Service(config, new Store(data), topology);
+        return new Service(config, dao, topology);
+//        return new Service(config, new Store(data), topology);
     }
 }

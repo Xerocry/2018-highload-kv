@@ -64,11 +64,11 @@ class ThreeNodeTest extends ClusterTestBase {
         dao0 = KVDaoFactory.create(data0);
         dao1 = KVDaoFactory.create(data1);
         dao2 = KVDaoFactory.create(data2);
-        storage0 = KVServiceFactory.create(port0, data0, endpoints);
+        storage0 = KVServiceFactory.create(port0, dao0, endpoints);
         storage0.start();
-        storage1 = KVServiceFactory.create(port1, data1, endpoints);
+        storage1 = KVServiceFactory.create(port1, dao1, endpoints);
         storage1.start();
-        storage2 = KVServiceFactory.create(port2, data2, endpoints);
+        storage2 = KVServiceFactory.create(port2, dao2, endpoints);
         start(2, storage2);
     }
 
@@ -210,7 +210,7 @@ class ThreeNodeTest extends ClusterTestBase {
             assertEquals(201, upsert(0, key, value, 2, 3).getStatus());
 
             // Start node 1
-            storage1 = KVServiceFactory.create(port1, data1, endpoints);
+            storage1 = KVServiceFactory.create(port1, dao1, endpoints);
             start(1, storage1);
 
             // Check
@@ -239,7 +239,7 @@ class ThreeNodeTest extends ClusterTestBase {
             assertEquals(202, delete(1, key, 2, 3).getStatus());
 
             // Start node 0
-            storage0 = KVServiceFactory.create(port0, data0, endpoints);
+            storage0 = KVServiceFactory.create(port0, dao0, endpoints);
             start(0, storage0);
 
             // Check
@@ -291,7 +291,7 @@ class ThreeNodeTest extends ClusterTestBase {
             stop(2, storage2);
 
             // Start node 0
-            storage0 = KVServiceFactory.create(port0, data0, endpoints);
+            storage0 = KVServiceFactory.create(port0, dao0, endpoints);
             start(0, storage0);
 
             // Check node 0
@@ -303,7 +303,7 @@ class ThreeNodeTest extends ClusterTestBase {
             stop(0, storage0);
 
             // Start node 1
-            storage1 = KVServiceFactory.create(port1, data1, endpoints);
+            storage1 = KVServiceFactory.create(port1, dao1, endpoints);
             start(1, storage1);
 
             // Check node 1
@@ -315,7 +315,7 @@ class ThreeNodeTest extends ClusterTestBase {
             stop(1, storage1);
 
             // Start node 2
-            storage2 = KVServiceFactory.create(port2, data2, endpoints);
+            storage2 = KVServiceFactory.create(port2, dao2, endpoints);
             start(2, storage2);
 
             // Check node 2
@@ -324,9 +324,9 @@ class ThreeNodeTest extends ClusterTestBase {
             }
 
             // Start node 0 & 1
-            storage0 = KVServiceFactory.create(port0, data0, endpoints);
+            storage0 = KVServiceFactory.create(port0, dao0, endpoints);
             storage0.start();
-            storage1 = KVServiceFactory.create(port1, data1, endpoints);
+            storage1 = KVServiceFactory.create(port1, dao1, endpoints);
             start(1, storage1);
 
             // Check
@@ -351,7 +351,7 @@ class ThreeNodeTest extends ClusterTestBase {
             stop(2, storage2);
 
             // Start node 0
-            storage0 = KVServiceFactory.create(port0, data0, endpoints);
+            storage0 = KVServiceFactory.create(port0, dao0, endpoints);
             start(0, storage0);
 
             // Check node 0
@@ -363,7 +363,7 @@ class ThreeNodeTest extends ClusterTestBase {
             stop(0, storage0);
 
             // Start node 1
-            storage1 = KVServiceFactory.create(port1, data1, endpoints);
+            storage1 = KVServiceFactory.create(port1, dao1, endpoints);
             start(1, storage1);
 
             // Check node 1
@@ -375,7 +375,7 @@ class ThreeNodeTest extends ClusterTestBase {
             stop(1, storage1);
 
             // Start node 2
-            storage2 = KVServiceFactory.create(port2, data2, endpoints);
+            storage2 = KVServiceFactory.create(port2, dao2, endpoints);
             start(2, storage2);
 
             // Check node 2
@@ -384,9 +384,9 @@ class ThreeNodeTest extends ClusterTestBase {
             }
 
             // Start node 0 & 1
-            storage0 = KVServiceFactory.create(port0, data0, endpoints);
+            storage0 = KVServiceFactory.create(port0, dao0, endpoints);
             storage0.start();
-            storage1 = KVServiceFactory.create(port1, data1, endpoints);
+            storage1 = KVServiceFactory.create(port1, dao1, endpoints);
             start(1, storage1);
 
             // Check

@@ -57,7 +57,7 @@ class StartStopTest extends TestBase {
         data = Files.createTempDirectory();
         dao = KVDaoFactory.create(data);
         port = randomPort();
-        kvService = KVServiceFactory.create(port, data, Collections.singleton(endpoint(port)));
+        kvService = KVServiceFactory.create(port, dao, Collections.singleton(endpoint(port)));
         reset();
     }
 

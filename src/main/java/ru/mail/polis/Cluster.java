@@ -16,6 +16,8 @@
 
 package ru.mail.polis;
 
+import ru.mail.polis.xerocry.Store;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
@@ -44,6 +46,8 @@ public final class Cluster {
         for (int i = 0; i < PORTS.length; i++) {
             final int port = PORTS[i];
             final File data = Files.createTempDirectory();
+            final KVDao dao = (Store) KVDaoFactory.create(data);
+
 
             System.out.println("Starting node " + i + " on port " + port + " and data at " + data);
 
@@ -51,11 +55,19 @@ public final class Cluster {
             final KVService storage =
                     KVServiceFactory.create(
                             port,
-                            data,
+                            dao,
                             topology);
             storage.start();
             Runtime.getRuntime().addShutdownHook(
-                    new Thread(storage::stop));
+                    new Thread(() -> {
+                        storage.stop();
+                        try {
+                            dao.close();
+                            Files.recursiveDelete(data);
+                        } catch (IOException e) {
+                            throw new RuntimeException("Can't close dao", e);
+                        }
+                    }));
         }
     }
 }

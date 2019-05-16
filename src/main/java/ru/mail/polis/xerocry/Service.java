@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import one.nio.http.*;
 import one.nio.net.ConnectionString;
 import org.jetbrains.annotations.NotNull;
+import ru.mail.polis.KVDao;
 import ru.mail.polis.KVService;
 
 import java.io.IOException;
@@ -15,6 +16,9 @@ import java.util.regex.Pattern;
 public class Service extends HttpServer implements KVService {
     private Map<String, HttpClient> cluster = new HashMap<>();
 
+    @NotNull
+    private final Store store;
+
     private final PutProcessor putProcessor;
     private final DeleteProcessor deleteProcessor;
     private final GetProcessor getProcessor;
@@ -22,15 +26,16 @@ public class Service extends HttpServer implements KVService {
     private final static Pattern ID = Pattern.compile(".*id=([\\w]*)(.*)?");
     private final static Pattern REPLICAS = Pattern.compile(".*replicas=([\\w]*/[\\w]*)");
 
-    public Service(HttpServerConfig config, @NotNull Store store, Set<String> topology) throws IOException {
+    public Service(HttpServerConfig config, @NotNull KVDao store, Set<String> topology) throws IOException {
         super(config);
         for (String str : topology) {
             cluster.put(str, new HttpClient(new ConnectionString(str)));
         }
+        this.store = (Store) store;
         String replica = topology.stream().filter(r -> r.indexOf(":" + port) > 0).findFirst().get();
-        putProcessor = new PutProcessor(store, cluster, replica);
-        getProcessor = new GetProcessor(store, cluster, replica);
-        deleteProcessor = new DeleteProcessor(store, cluster, replica);
+        putProcessor = new PutProcessor(this.store, cluster, replica);
+        getProcessor = new GetProcessor(this.store, cluster, replica);
+        deleteProcessor = new DeleteProcessor(this.store, cluster, replica);
     }
 
     @Path("/v0/status")
@@ -103,6 +108,7 @@ public class Service extends HttpServer implements KVService {
     @Override
     public void stop() {
         super.stop();
+
     }
 
     @Override

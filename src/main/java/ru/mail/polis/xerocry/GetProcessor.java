@@ -44,9 +44,13 @@ public class GetProcessor extends RequestProcessor {
                         timestampToValue.put(store.getAsValue(id).getTimestamp(), store.get(id.getBytes()));
                         ackFound.incrementAndGet();
                     } catch (NoSuchElementException e) {
-                        if (store.isDeleted(id)) {
-                            ackDeleted.incrementAndGet();
-                        } else {
+                        try {
+                            if (store.isDeleted(id)) {
+                                ackDeleted.incrementAndGet();
+                            } else {
+                                ackNotFound.incrementAndGet();
+                            }
+                        } catch (NoSuchElementException e1) {
                             ackNotFound.incrementAndGet();
                         }
                         ackFound.incrementAndGet();

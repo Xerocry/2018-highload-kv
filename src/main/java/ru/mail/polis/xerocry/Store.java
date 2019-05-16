@@ -1,5 +1,6 @@
 package ru.mail.polis.xerocry;
 
+import lombok.SneakyThrows;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.Options;
 import org.iq80.leveldb.impl.Iq80DBFactory;
@@ -14,6 +15,7 @@ public class Store implements KVDao {
 
     private final DB db;
 
+    @SneakyThrows
     public Store(File dir) throws IOException {
         Options options = new Options();
         options.createIfMissing(true);
@@ -21,22 +23,32 @@ public class Store implements KVDao {
     }
 
     @Override
-    public void close() {
+    public void close() throws IOException {
+        db.close();
     }
 
     boolean isDeleted(String key) {
-        Value value = Value.fromBytes(db.get(key.getBytes()));
-        if (value.getVal() == null) {
+        byte[] temp = db.get(key.getBytes());
+        if (temp == null) {
             throw new NoSuchElementException();
-        } else return value.isDeleted();
+        } else {
+            Value value = Value.fromBytes(temp);
+            return value.isDeleted();
+        }
+
     }
 
     Value getAsValue(String key) throws NoSuchElementException {
-        byte[] value = db.get(key.getBytes());
-        if (value == null) {
-            throw new NoSuchElementException("No such element");
+        byte[] temp = db.get(key.getBytes());
+        if (temp == null) {
+            throw new NoSuchElementException();
+        } else {
+            Value value = Value.fromBytes(temp);
+            if (value.isDeleted()) {
+                throw new NoSuchElementException("No such element");
+            }
+            return Value.fromBytes(temp);
         }
-        return Value.fromBytes(value);
     }
 
     @NotNull
